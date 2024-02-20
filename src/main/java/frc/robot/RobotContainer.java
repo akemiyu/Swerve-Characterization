@@ -19,9 +19,11 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Util.CommandXboxPS5Controller;
@@ -39,7 +41,11 @@ public class RobotContainer {
   private double AngularRate = MaxAngularRate; // This will be updated when turtle and reset to MaxAngularRate
 
   /* Setting up bindings for necessary control of the swerve drive platform */
-  CommandXboxPS5Controller drv = new CommandXboxPS5Controller(0); // driver xbox controller
+  Joystick drv = new Joystick(0); // driver xbox controller
+  JoystickButton x = new JoystickButton(drv, 1);
+  JoystickButton y = new JoystickButton(drv, 2);
+  JoystickButton a = new JoystickButton(drv, 3);
+  JoystickButton b = new JoystickButton(drv, 4);
   CommandXboxPS5Controller op = new CommandXboxPS5Controller(1); // operator xbox controller
   CommandSwerveDrivetrain drivetrain = TunerConstants.DriveTrain; // drivetrain
 
@@ -71,21 +77,21 @@ public class RobotContainer {
   private Double lastSpeed = 0.65;
 
   private void configureBindings() {
-    newControlStyle();
+    // newControlStyle();
     newSpeed();
 
-    drv.a().whileTrue(drivetrain.applyRequest(() -> brake));
-    drv.b().whileTrue(drivetrain
-        .applyRequest(() -> point.withModuleDirection(new Rotation2d(-drv.getLeftY(), -drv.getLeftX()))));
+    // drv.a().whileTrue(drivetrain.applyRequest(() -> brake));
+    // drv.b().whileTrue(drivetrain
+    //     .applyRequest(() -> point.withModuleDirection(new Rotation2d(-drv.getLeftY(), -drv.getLeftX()))));
 
-    // reset the field-centric heading on start button press
-    drv.start().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
+    // // reset the field-centric heading on start button press
+    // drv.start().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
 
-    // Turtle Mode while held
-    drv.leftBumper().onTrue(runOnce(() -> MaxSpeed = TunerConstants.kSpeedAt12VoltsMps * TurtleSpeed)
-        .andThen(() -> AngularRate = TurtleAngularRate));
-    drv.leftBumper().onFalse(runOnce(() -> MaxSpeed = TunerConstants.kSpeedAt12VoltsMps * speedChooser.getSelected())
-        .andThen(() -> AngularRate = MaxAngularRate));
+    // // Turtle Mode while held
+    // drv.leftBumper().onTrue(runOnce(() -> MaxSpeed = TunerConstants.kSpeedAt12VoltsMps * TurtleSpeed)
+    //     .andThen(() -> AngularRate = TurtleAngularRate));
+    // drv.leftBumper().onFalse(runOnce(() -> MaxSpeed = TunerConstants.kSpeedAt12VoltsMps * speedChooser.getSelected())
+    //     .andThen(() -> AngularRate = MaxAngularRate));
 
     if (Utils.isSimulation()) {
       drivetrain.seedFieldRelative(new Pose2d(new Translation2d(), Rotation2d.fromDegrees(0)));
@@ -93,25 +99,25 @@ public class RobotContainer {
     drivetrain.registerTelemetry(logger::telemeterize);
 
     Trigger controlPick = new Trigger(() -> lastControl != controlChooser.getSelected());
-    controlPick.onTrue(runOnce(() -> newControlStyle()));
+    // controlPick.onTrue(runOnce(() -> newControlStyle()));
 
     Trigger speedPick = new Trigger(() -> lastSpeed != speedChooser.getSelected());
     speedPick.onTrue(runOnce(() -> newSpeed()));
 
-    drv.x().and(drv.pov(0)).whileTrue(drivetrain.runDriveQuasiTest(Direction.kForward));
-    drv.x().and(drv.pov(180)).whileTrue(drivetrain.runDriveQuasiTest(Direction.kReverse));
+    x.and(() -> drv.getY() > 0).whileTrue(drivetrain.runDriveQuasiTest(Direction.kForward));
+    x.and(() -> drv.getY() < 0).whileTrue(drivetrain.runDriveQuasiTest(Direction.kReverse));
 
-    drv.y().and(drv.pov(0)).whileTrue(drivetrain.runDriveDynamTest(Direction.kForward));
-    drv.y().and(drv.pov(180)).whileTrue(drivetrain.runDriveDynamTest(Direction.kReverse));
+    y.and(() -> drv.getY() > 0).whileTrue(drivetrain.runDriveDynamTest(Direction.kForward));
+    y.and(() -> drv.getY() < 0).whileTrue(drivetrain.runDriveDynamTest(Direction.kReverse));
 
-    drv.a().and(drv.pov(0)).whileTrue(drivetrain.runSteerQuasiTest(Direction.kForward));
-    drv.a().and(drv.pov(180)).whileTrue(drivetrain.runSteerQuasiTest(Direction.kReverse));
+    a.and(() -> drv.getY() > 0).whileTrue(drivetrain.runSteerQuasiTest(Direction.kForward));
+    a.and(() -> drv.getY() < 0).whileTrue(drivetrain.runSteerQuasiTest(Direction.kReverse));
 
-    drv.b().and(drv.pov(0)).whileTrue(drivetrain.runSteerDynamTest(Direction.kForward));
-    drv.b().and(drv.pov(180)).whileTrue(drivetrain.runSteerDynamTest(Direction.kReverse));
+    b.and(() -> drv.getY() > 0).whileTrue(drivetrain.runSteerDynamTest(Direction.kForward));
+    b.and(() -> drv.getY() < 0).whileTrue(drivetrain.runSteerDynamTest(Direction.kReverse));
 
     // Drivetrain needs to be placed against a sturdy wall and test stopped immediately upon wheel slip
-    drv.back().and(drv.pov(0)).whileTrue(drivetrain.runDriveSlipTest());
+    // drv.back().and(drv.pov(0)).whileTrue(drivetrain.runDriveSlipTest());
   }
 
   public RobotContainer() {
@@ -151,43 +157,43 @@ public class RobotContainer {
     return autoChooser.getSelected();
   }
 
-  private void newControlStyle() {
-    lastControl = controlChooser.getSelected();
-    switch (controlChooser.getSelected()) {
-      case "2 Joysticks":
-        controlStyle = () -> drive.withVelocityX(-drv.getLeftY() * MaxSpeed) // Drive forward -Y
-            .withVelocityY(-drv.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-            .withRotationalRate(-drv.getRightX() * AngularRate); // Drive counterclockwise with negative X (left)
-        break;
-      case "1 Joystick Rotation Triggers":
-        controlStyle = () -> drive.withVelocityX(-drv.getLeftY() * MaxSpeed) // Drive forward -Y
-            .withVelocityY(-drv.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-            .withRotationalRate((drv.getLeftTriggerAxis() - drv.getRightTriggerAxis()) * AngularRate);
-            // Left trigger turns left, right trigger turns right
-        break;
-      case "Split Joysticks Rotation Triggers":
-        controlStyle = () -> drive.withVelocityX(-drv.getLeftY() * MaxSpeed) // Left stick forward/back
-            .withVelocityY(-drv.getRightX() * MaxSpeed) // Right stick strafe
-            .withRotationalRate((drv.getLeftTriggerAxis() - drv.getRightTriggerAxis()) * AngularRate);
-            // Left trigger turns left, right trigger turns right
-        break;
-      case "2 Joysticks with Gas Pedal":
-        controlStyle = () -> {
-            var stickX = -drv.getLeftX();
-            var stickY = -drv.getLeftY();
-            var angle = Math.atan2(stickX, stickY);
-            return drive.withVelocityX(Math.cos(angle) * drv.getRightTriggerAxis() * MaxSpeed) // left x * gas
-                .withVelocityY(Math.sin(angle) * drv.getRightTriggerAxis() * MaxSpeed) // Angle of left stick Y * gas pedal
-                .withRotationalRate(-drv.getRightX() * AngularRate); // Drive counterclockwise with negative X (left)
-        };
-        break;
-    }
-    try {
-      drivetrain.getDefaultCommand().cancel();
-    } catch(Exception e) {}
-    drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
-        drivetrain.applyRequest(controlStyle).ignoringDisable(true));
-  }
+  // private void newControlStyle() {
+  //   lastControl = controlChooser.getSelected();
+  //   switch (controlChooser.getSelected()) {
+  //     case "2 Joysticks":
+  //       controlStyle = () -> drive.withVelocityX(-drv.getLeftY() * MaxSpeed) // Drive forward -Y
+  //           .withVelocityY(-drv.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+  //           .withRotationalRate(-drv.getRightX() * AngularRate); // Drive counterclockwise with negative X (left)
+  //       break;
+  //     case "1 Joystick Rotation Triggers":
+  //       controlStyle = () -> drive.withVelocityX(-drv.getLeftY() * MaxSpeed) // Drive forward -Y
+  //           .withVelocityY(-drv.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+  //           .withRotationalRate((drv.getLeftTriggerAxis() - drv.getRightTriggerAxis()) * AngularRate);
+  //           // Left trigger turns left, right trigger turns right
+  //       break;
+  //     case "Split Joysticks Rotation Triggers":
+  //       controlStyle = () -> drive.withVelocityX(-drv.getLeftY() * MaxSpeed) // Left stick forward/back
+  //           .withVelocityY(-drv.getRightX() * MaxSpeed) // Right stick strafe
+  //           .withRotationalRate((drv.getLeftTriggerAxis() - drv.getRightTriggerAxis()) * AngularRate);
+  //           // Left trigger turns left, right trigger turns right
+  //       break;
+  //     case "2 Joysticks with Gas Pedal":
+  //       controlStyle = () -> {
+  //           var stickX = -drv.getLeftX();
+  //           var stickY = -drv.getLeftY();
+  //           var angle = Math.atan2(stickX, stickY);
+  //           return drive.withVelocityX(Math.cos(angle) * drv.getRightTriggerAxis() * MaxSpeed) // left x * gas
+  //               .withVelocityY(Math.sin(angle) * drv.getRightTriggerAxis() * MaxSpeed) // Angle of left stick Y * gas pedal
+  //               .withRotationalRate(-drv.getRightX() * AngularRate); // Drive counterclockwise with negative X (left)
+  //       };
+  //       break;
+  //   }
+  //   try {
+  //     drivetrain.getDefaultCommand().cancel();
+  //   } catch(Exception e) {}
+  //   drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
+  //       drivetrain.applyRequest(controlStyle).ignoringDisable(true));
+  // }
 
   private void newSpeed() {
     lastSpeed = speedChooser.getSelected();
