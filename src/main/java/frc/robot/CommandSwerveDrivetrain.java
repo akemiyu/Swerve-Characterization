@@ -1,5 +1,8 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.units.Units.Volts;
+
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
@@ -25,8 +28,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Util.ModifiedSignalLogger;
 import frc.robot.Util.SwerveVoltageRequest;
 import frc.robot.generated.TunerConstants;
-
-import static edu.wpi.first.units.Units.*;
 
 /**
  * Class that extends the Phoenix SwerveDrivetrain class and implements subsystem
